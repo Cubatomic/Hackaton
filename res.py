@@ -60,6 +60,7 @@ def main ():
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     predictor = DefaultPredictor (cfg)
 
+    os.mkdir (folder)
     vfn = input ("Video file name: ")
     cap = cv2.VideoCapture (vfn)
     k = 1
