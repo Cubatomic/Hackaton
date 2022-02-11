@@ -74,7 +74,7 @@ def main ():
         k += 1
     maximg = k - 1
 
-    fout = open ("gistogramm.txt", 'w')
+    fout = open ("gistogram.txt", 'w')
     fout.write ("Number of frames: " + maximg)
     for x in range (len (fms)):
         fout.write ("Frame: img" + str (x + 1) + ".jpg")
