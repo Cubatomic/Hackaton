@@ -60,7 +60,10 @@ def main ():
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     predictor = DefaultPredictor (cfg)
 
-    os.mkdir (folder)
+    try:
+        os.mkdir (folder)
+    except:
+        pass
     vfn = input ("Video file name: ")
     cap = cv2.VideoCapture (vfn)
     k = 1
@@ -76,12 +79,12 @@ def main ():
     maximg = k - 1
 
     fout = open ("gistogram.txt", 'w')
-    fout.write ("Number of frames: " + maximg)
-    for x in range (len (fms)):
-        fout.write ("Frame: img" + str (x + 1) + ".jpg")
+    fout.write ("Number of frames: " + str (maximg))
+    for ffo in range (len (fms)):
+        fout.write ("Frame: img" + str (ffo + 1) + ".jpg")
         for i in range (19):
-            fout.write (str (fms [x] [i]) + ", ")
-        fout.write ((fms [x] [19]) + '\n')
+            fout.write (str (fms [ffo] [i]) + ", ")
+        fout.write (str (fms [x] [19]) + '\n')
 
     plt.rc ("xtick", labelsize = 5)
     fig, ax = plt.subplots ()
