@@ -41,7 +41,7 @@ def fb (text):
 def visualize (frameid):
     global x, ax
     ax.clear ()
-    y = fms [frameid + 1]
+    y = fms [frameid - 1]
     ax.set_xticks (np.arange (20), labels = x)
     p = ax.bar (np.arange (20), y)
     ax.bar_label (p, label_type = "edge")
@@ -80,11 +80,11 @@ def main ():
 
     fout = open ("gistogram.txt", 'w')
     fout.write ("Number of frames: " + str (maximg))
-    for ffo in range (len (fms)):
-        fout.write ("Frame: img" + str (ffo + 1) + ".jpg")
+    for q in range (len (fms)):
+        fout.write ("Frame: img" + str (q + 1) + ".jpg")
         for i in range (19):
-            fout.write (str (fms [ffo] [i]) + ", ")
-        fout.write (str (fms [ffo] [19]) + '\n')
+            fout.write (str (fms [q] [i]) + ", ")
+        fout.write (str (fms [q] [19]) + '\n')
 
     plt.rc ("xtick", labelsize = 5)
     fig, ax = plt.subplots ()
