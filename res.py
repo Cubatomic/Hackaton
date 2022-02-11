@@ -81,9 +81,9 @@ def main ():
     fout = open ("gistogram.txt", 'w')
     fout.write ("Number of frames: " + str (maximg))
     for q in range (len (fms)):
-        fout.write ("Frame: img" + str (q + 1) + ".jpg")
+        fout.write ("Frame: img" + str (q + 1) + ".jpg, regions: ")
         for i in range (19):
-            fout.write (str (fms [q] [i]) + ", ")
+            fout.write (str (int (fms [q] [i])) + ", ")
         fout.write (str (fms [q] [19]) + '\n')
 
     plt.rc ("xtick", labelsize = 5)
