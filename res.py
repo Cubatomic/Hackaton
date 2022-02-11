@@ -137,6 +137,7 @@ def main ():
         cv2.imshow ("Test", out.get_image () [:, :, ::-1])
 
     cfg = get_cfg ()
+    cfg.TEST.DETECTIONS_PER_IMAGE = 1000
     cfg.MODEL.DEVICE = "cpu"
     cfg.MODEL.WEIGHTS = "model.pth"
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
