@@ -16,7 +16,7 @@ ax = None
 predictor = None
 maximg = 349
 
-def loadframe (fname):
+def loaddata (fname):
     global predictor
 
     im = cv2.imread ("data/" + fname)
@@ -45,7 +45,8 @@ def visualize (frameid):
     ldf = loaddata (fname)
 
     y = np.zeros (20)
-    for obj in ldf:
+    print (len (ldf))
+    '''for obj in ldf:
         square = 0
         for i in range (len (obj) - 1):
             square += obj [i].x * obj [i + 1].y
@@ -55,6 +56,7 @@ def visualize (frameid):
         square /= 2
         if square >= 50:
             y [min (square // 250, 19)] += 1
+            '''
     
     ax.set_xticks (np.arange (20), labels = x)
     p = ax.bar (np.arange (20), y)
