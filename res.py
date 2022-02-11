@@ -63,7 +63,7 @@ def loaddata (fname):
     outputs = predictor (im)
     v = Visualizer (im [:, :, ::-1], metadata = porridge_metadata, scale = 1.0)
     out = v.draw_instance_predictions (outputs ["instances"].to ("cpu"))
-    cv2_imshow (out.get_image () [:, :, ::-1])
+    cv2.imshow (fname, out.get_image () [:, :, ::-1])
     #return np.random.randint (1, 20, size = 20)
     return outputs ["instances"].pred_keypoints
 
@@ -124,9 +124,17 @@ def main ():
     #maximg = k - 1
 
     for d in ["train", "val"]:
-    DatasetCatalog.register ("porridge_" + d, lambda d=d: get_porridge_dicts ("porridge/" + d))
-    MetadataCatalog.get ("porridge_" + d).set (thing_classes = ["porridge"])
+        DatasetCatalog.register ("porridge_" + d, lambda d=d: get_porridge_dicts ("porridge/" + d))
+        MetadataCatalog.get ("porridge_" + d).set (thing_classes = ["porridge"])
     porridge_metadata = MetadataCatalog.get ("porridge_train")
+
+    dataset_dicts = get_porridge_dicts ("porridge/train")
+    for d in dataset_dicts:
+        print (d ["file_name"])
+        img = cv2.imread (d ["file_name"])
+        visualizer = Visualizer (img [:, :, ::-1], metadata = porridge_metadata, scale=1.0)
+        out = visualizer.draw_dataset_dict (d)
+        cv2.imshow ("Test", out.get_image () [:, :, ::-1])
 
     cfg = get_cfg ()
     cfg.MODEL.DEVICE = "cpu"
