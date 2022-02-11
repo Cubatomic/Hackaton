@@ -14,6 +14,7 @@ from matplotlib.widgets import TextBox
 x = []
 ax = None
 predictor = None
+maximg = 349
 
 def loadframe (fname):
     global predictor
@@ -30,7 +31,8 @@ def loadframe (fname):
 def fb (text):
     try:
         frameid = int (text)
-        visualize (frameid)
+        if frameid > 0 and frameid <= maximg:
+            visualize (frameid)
     except:
         pass
 
@@ -40,7 +42,20 @@ def visualize (frameid):
 
     ax.clear ()
     fname = "img" + str (frameid) + ".jpg"
-    y = loadframe (fname)
+    ldf = loaddata (fname)
+
+    y = np.zeros (20)
+    for obj in ldf:
+        square = 0
+        for i in range (len (obj) - 1):
+            square += obj [i].x * obj [i + 1].y
+            square -= obj [i].y * obj [i + 1].x
+        square += obj [-1].x * obj [0].y
+        square += obj [-1].y * obj [0].x
+        square /= 2
+        if square >= 50:
+            y [min (square // 250, 19)] += 1
+    
     ax.set_xticks (np.arange (20), labels = x)
     p = ax.bar (np.arange (20), y)
     ax.bar_label (p, label_type = "edge")
@@ -65,7 +80,9 @@ def main ():
         cv2.imwrite ("data/img" + tk + ".jpg", frame)
         print (k)
         k += 1
+    #maximg = k - 1
 
+    cfg = get_cfg ()
     cfg.MODEL.WEIGHTS = "model.pth"
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     predictor = DefaultPredictor (cfg)
@@ -83,10 +100,10 @@ def main ():
         x.append ("(" + str (i*250) + "; " + str (i*250 + 250) + "]")
 
     axbox = plt.axes ([0.4, 0.9, 0.2, 0.075])
-    text_box = TextBox (axbox, "Frame: ", initial = "0")
+    text_box = TextBox (axbox, "Frame: ", initial = "1")
     text_box.on_submit (fb)
     
-    visualize (0)
+    visualize (1)
 
 
 if __name__ == "__main__":
