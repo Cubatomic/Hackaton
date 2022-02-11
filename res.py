@@ -1,63 +1,20 @@
-import os, cv2, json
+import os, cv2
 import numpy as np
 import detectron2
 from detectron2 import model_zoo
-from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
-from detectron2.data import MetadataCatalog, DatasetCatalog
-from detectron2.structures import BoxMode
+from detectron2.engine import DefaultPredictor
 from matplotlib import pyplot as plt
 from matplotlib.widgets import TextBox
 
 x = []
 ax = None
 predictor = None
-porridge_metadata = None
 maximg = 349
-
-def get_porridge_dicts (img_dir):
-    json_file = os.path.join (img_dir, "1.json")
-    with open (json_file) as f:
-        imgs_anns = json.load (f)
-
-    dataset_dicts = []
-    for idx, v in enumerate (imgs_anns.values()):
-        record = {}
-        
-        filename = os.path.join (img_dir, v ["filename"])
-        height, width = cv2.imread (filename).shape [:2]
-        
-        record ["file_name"] = filename
-        record ["image_id"] = idx
-        record ["height"] = height
-        record ["width"] = width
-      
-        annos = v ["regions"]
-        objs = []
-        for _, anno in annos.items ():
-            #let it be
-            assert not anno ["region_attributes"]
-            anno = anno ["shape_attributes"]
-            px = anno ["all_points_x"]
-            py = anno ["all_points_y"]
-            poly = [(x + 0.5, y + 0.5) for x, y in zip (px, py)]
-            poly = [p for x in poly for p in x]
-
-            obj = {
-                "bbox": [np.min (px), np.min (py), np.max (px), np.max (py)],
-                "bbox_mode": BoxMode.XYXY_ABS,
-                "segmentation": [poly],
-                "category_id": 0,
-            }
-            objs.append (obj)
-        record ["annotations"] = objs
-        dataset_dicts.append (record)
-    return dataset_dicts
 
 
 def loaddata (fname):
-    global predictor, porridge_metadata
-
+    global predictor
     im = cv2.imread ("data/" + fname)
     outputs = predictor (im)
     return outputs ["instances"].pred_masks
@@ -91,12 +48,8 @@ def visualize (frameid):
     plt.show ()
 
 
-def proceed ():
-    print ("brr")
-
-
 def main ():
-    global x, ax, predictor, porridge_metadata
+    global x, ax, predictor
     
     vfn = input ("Video file name: ")
     cap = cv2.VideoCapture (vfn)
@@ -111,13 +64,7 @@ def main ():
         k += 1
     #maximg = k - 1
 
-    for d in ["val"]:
-        DatasetCatalog.register ("porridge_" + d, lambda d=d: get_porridge_dicts ("porridge/" + d))
-        MetadataCatalog.get ("porridge_" + d).set (thing_classes = ["porridge"])
-    porridge_metadata = MetadataCatalog.get ("porridge_train")
-
     cfg = get_cfg ()
-    os.makedirs (cfg.OUTPUT_DIR, exist_ok = True)
     cfg.merge_from_file (model_zoo.get_config_file ("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.TEST.DETECTIONS_PER_IMAGE = 1000
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
