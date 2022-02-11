@@ -80,15 +80,8 @@ def visualize (frameid):
     ldf = loaddata (fname)
 
     y = np.zeros (20)
-    print (ldf)
     for obj in ldf:
-        square = 0
-        for i in range (len (obj) - 1):
-            square += obj [i].x * obj [i + 1].y
-            square -= obj [i].y * obj [i + 1].x
-        square += obj [-1].x * obj [0].y
-        square += obj [-1].y * obj [0].x
-        square /= 2
+        square = obj.sum ()
         if square >= 50:
             y [min (square // 250, 19)] += 1
     
@@ -123,15 +116,8 @@ def main ():
         MetadataCatalog.get ("porridge_" + d).set (thing_classes = ["porridge"])
     porridge_metadata = MetadataCatalog.get ("porridge_train")
 
-    for d in dataset_dicts:
-        print (d ["file_name"])
-        img = cv2.imread (d ["file_name"])
-        visualizer = Visualizer (img [:, :, ::-1], metadata = porridge_metadata, scale=1.0)
-        out = visualizer.draw_dataset_dict (d)
-        cv2.imshow ("Test", out.get_image () [:, :, ::-1])
-
-    os.makedirs (cfg.OUTPUT_DIR, exist_ok=True)
     cfg = get_cfg ()
+    os.makedirs (cfg.OUTPUT_DIR, exist_ok = True)
     cfg.merge_from_file (model_zoo.get_config_file ("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.TEST.DETECTIONS_PER_IMAGE = 1000
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
