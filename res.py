@@ -10,14 +10,23 @@ from matplotlib.widgets import TextBox
 x = []
 ax = None
 predictor = None
-maximg = 349
+maximg = 0
+folder = "data/"
+fms = []
 
 
 def loaddata (fname):
-    global predictor
-    im = cv2.imread ("data/" + fname)
+    global folder, predictor
+    im = cv2.imread (folder + fname)
     outputs = predictor (im)
-    return outputs ["instances"].pred_masks
+
+    vals = np.zeros (20)
+    for obj in outputs ["instances"].pred_masks:
+        square = obj.sum ()
+        if square >= 50:
+            vals [min (square // 250, 19)] += 1
+
+    fms.append (vals)
 
 
 def fb (text):
@@ -31,17 +40,8 @@ def fb (text):
 
 def visualize (frameid):
     global x, ax
-
     ax.clear ()
-    fname = "img" + str (frameid) + ".jpg"
-    ldf = loaddata (fname)
-
-    y = np.zeros (20)
-    for obj in ldf:
-        square = obj.sum ()
-        if square >= 50:
-            y [min (square // 250, 19)] += 1
-    
+    y = fms [frameid + 1]
     ax.set_xticks (np.arange (20), labels = x)
     p = ax.bar (np.arange (20), y)
     ax.bar_label (p, label_type = "edge")
@@ -49,20 +49,7 @@ def visualize (frameid):
 
 
 def main ():
-    global x, ax, predictor
-    
-    vfn = input ("Video file name: ")
-    cap = cv2.VideoCapture (vfn)
-    k = 1
-    while True:
-        ret, frame = cap.read ()
-        if frame is None:
-            break
-        tk = str (k)
-        cv2.imwrite ("data/img" + tk + ".jpg", frame)
-        print (k)
-        k += 1
-    #maximg = k - 1
+    global folder, x, ax, predictor, maximg
 
     cfg = get_cfg ()
     cfg.merge_from_file (model_zoo.get_config_file ("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
@@ -72,6 +59,28 @@ def main ():
     cfg.MODEL.WEIGHTS = "model.pth"
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     predictor = DefaultPredictor (cfg)
+
+    vfn = input ("Video file name: ")
+    cap = cv2.VideoCapture (vfn)
+    k = 1
+    while True:
+        ret, frame = cap.read ()
+        if frame is None:
+            break
+        fname = "img" + str (k) + ".jpg"
+        cv2.imwrite (folder + fname, frame)
+        loaddata (fname)
+        #print (k)
+        k += 1
+    maximg = k - 1
+
+    fout = open ("gistogramm.txt", 'w')
+    fout.write ("Number of frames: " + maximg)
+    for x in range (len (fms)):
+        fout.write ("Frame: img" + str (x + 1) + ".jpg")
+        for i in range (19):
+            fout.write (str (fms [x] [i]) + ", ")
+        fout.write ((fms [x] [19]) + '\n')
 
     plt.rc ("xtick", labelsize = 5)
     fig, ax = plt.subplots ()
