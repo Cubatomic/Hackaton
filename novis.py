@@ -19,6 +19,8 @@ def loaddata (fname):
 
     im = cv2.imread ("data/" + fname)
     outputs = predictor (im)
+    print (outputs)
+    print (outputs ["instances"])
     return outputs ["instances"].pred_keypoints
 
 
