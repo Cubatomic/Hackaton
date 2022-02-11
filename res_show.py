@@ -107,7 +107,7 @@ def main ():
 
     fms = []
     cc = input ("Proceed single image (s) or video (v)?")
-    if cc == 's':
+    if cc == 'v':
         vfn = input ("Video file name: ")
         cap = cv2.VideoCapture (vfn)
         begin = int (input ("Begin from frame (indexation from 1): "))
@@ -127,8 +127,9 @@ def main ():
             k += 1
         maximg = num
             
-    elif cc == 'v':
+    elif cc == 's':
         sfn = input ("Image file name (path included): ")
+        fname = "img" + str(sfn) + ".jpg"
         fms.append (loaddata (fname))
         maximg = 1
 
@@ -177,7 +178,7 @@ def main ():
             outputs = predictor (im)
             v = Visualizer (im [:, :, ::-1], metadata = porridge_metadata, scale = 1.0)
             out = v.draw_instance_predictions (outputs ["instances"].to ("cpu"))
-            cv2.imshow (out.get_image () [:, :, ::-1])
+            cv2.imshow ('Image', out.get_image () [:, :, ::-1])
             cv2.imwrite (folder + "rimg" + str (kk) + ".jpg", out.get_image () [:, :, ::-1])
             kk += 1
         
