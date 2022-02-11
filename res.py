@@ -1,12 +1,11 @@
 import os, cv2, json
 import numpy as np
 import detectron2
+from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
-from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog, DatasetCatalog
 from detectron2.structures import BoxMode
-from detectron2.utils.visualizer import ColorMode
 from matplotlib import pyplot as plt
 from matplotlib.widgets import TextBox
 
@@ -61,11 +60,7 @@ def loaddata (fname):
 
     im = cv2.imread ("data/" + fname)
     outputs = predictor (im)
-    v = Visualizer (im [:, :, ::-1], metadata = porridge_metadata, scale = 1.0)
-    out = v.draw_instance_predictions (outputs ["instances"].to ("cpu"))
-    cv2.imshow (fname, out.get_image () [:, :, ::-1])
-    #return np.random.randint (1, 20, size = 20)
-    return outputs ["instances"].pred_keypoints
+    return outputs ["instances"].pred_masks
 
 
 def fb (text):
@@ -85,7 +80,7 @@ def visualize (frameid):
     ldf = loaddata (fname)
 
     y = np.zeros (20)
-    print (len (ldf))
+    print (ldf)
     for obj in ldf:
         square = 0
         for i in range (len (obj) - 1):
@@ -123,12 +118,11 @@ def main ():
         k += 1
     #maximg = k - 1
 
-    for d in ["train", "val"]:
+    for d in ["val"]:
         DatasetCatalog.register ("porridge_" + d, lambda d=d: get_porridge_dicts ("porridge/" + d))
         MetadataCatalog.get ("porridge_" + d).set (thing_classes = ["porridge"])
     porridge_metadata = MetadataCatalog.get ("porridge_train")
 
-    dataset_dicts = get_porridge_dicts ("porridge/train")
     for d in dataset_dicts:
         print (d ["file_name"])
         img = cv2.imread (d ["file_name"])
@@ -136,8 +130,11 @@ def main ():
         out = visualizer.draw_dataset_dict (d)
         cv2.imshow ("Test", out.get_image () [:, :, ::-1])
 
+    os.makedirs (cfg.OUTPUT_DIR, exist_ok=True)
     cfg = get_cfg ()
+    cfg.merge_from_file (model_zoo.get_config_file ("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.TEST.DETECTIONS_PER_IMAGE = 1000
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
     cfg.MODEL.DEVICE = "cpu"
     cfg.MODEL.WEIGHTS = "model.pth"
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
