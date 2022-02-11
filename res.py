@@ -84,7 +84,7 @@ def main ():
         fout.write ("Frame: img" + str (ffo + 1) + ".jpg")
         for i in range (19):
             fout.write (str (fms [ffo] [i]) + ", ")
-        fout.write (str (fms [x] [19]) + '\n')
+        fout.write (str (fms [ffo] [19]) + '\n')
 
     plt.rc ("xtick", labelsize = 5)
     fig, ax = plt.subplots ()
