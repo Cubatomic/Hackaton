@@ -18,45 +18,6 @@ porridge_metadata = MetadataCatalog.get ("porridge_train")
 OUT_FOLDER = "out/"
 
 
-def get_porridge_dicts (img_dir):
-    json_file = os.path.join (img_dir, "1.json")
-    with open (json_file) as f:
-        imgs_anns = json.load (f)
-
-    dataset_dicts = []
-    for idx, v in enumerate (imgs_anns.values ()):
-        record = {}
-
-        filename = os.path.join (img_dir, v ["filename"])
-        height, width = cv2.imread (filename).shape [:2]
-
-        record ["file_name"] = filename
-        record ["image_id"] = idx
-        record ["height"] = height
-        record ["width"] = width
-
-        annos = v ["regions"]
-        objs = []
-        for _, anno in annos.items ():
-            # let it be
-            assert not anno ["region_attributes"]
-            anno = anno ["shape_attributes"]
-            px = anno ["all_points_x"]
-            py = anno ["all_points_y"]
-            poly = [(x + 0.5, y + 0.5) for x, y in zip (px, py)]
-            poly = [p for x in poly for p in x]
-
-            obj = {
-                "bbox": [np.min (px), np.min (py), np.max (px), np.max (py)],
-                "bbox_mode": BoxMode.XYXY_ABS,
-                "segmentation": [poly],
-                "category_id": 0,
-            }
-            objs.append (obj)
-        record ["annotations"] = objs
-        dataset_dicts.append (record)
-    return dataset_dicts
-
 
 def loaddata (fname):
     global predictor, fms
@@ -90,9 +51,9 @@ def visualize (fname):
     plt.show ()
 
 
-def saveimage (fname):
+def saveimage (image_name, frame, outputs):
+
     v = Visualizer (frame[:, :, ::-1], metadata=porridge_metadata, scale=1.0)
-    boxes = v._convert_boxes (outputs ["instances"].pred_boxes.to ("cpu"))
     masks = outputs ["instances"].get ("pred_masks")
     masks = masks.to ("cpu")
     for m in masks:
@@ -100,7 +61,8 @@ def saveimage (fname):
     out = v.get_output ()
 
     proc_img = out.get_image () [:, :, ::-1]
-    cv2.imwrite (fname, proc_img)
+    cv2.imwrite (image_name, proc_img)
+    return proc_img
 
 
 def ProceedVideo (videoname):
@@ -109,13 +71,15 @@ def ProceedVideo (videoname):
     num = int (input ("Number of frames to proceed: "))
     end = begin + num
     k = 1
-    Images = []
+
+    out = None # 24 - FPS
     while k < begin:
         ret, frame = cap.read ()
         if frame is None:  # end of video
             break
         k += 1
     AllData = []
+    size = (0, 0) # just init
     while k < end:
         ret, frame = cap.read ()
         if frame is None:
@@ -126,21 +90,20 @@ def ProceedVideo (videoname):
         cv2.imwrite (folder + fname, frame)
         data, outputs = loaddata (folder + fname)
         AllData.append (data)
-        """
-        v = Visualizer(frame[:, :, ::-1], metadata=porridge_metadata, scale=1.0)
-        #out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-        masks = outputs["instances"].get("pred_masks").to("cpu")
-        for m in masks:
-            v.draw_mask(m)
-        v = v.get_output()
-        #print(v.get_image()[:, :, ::-1])
-        #cv2.imshow('Image', out.get_image()[:, :, ::-1])
-        
-        """
+
         image_file = OUT_FOLDER + "img{}.jpg".format (k)
-        saveimage (image_file)
+        proc_video = saveimage (image_file, frame, outputs)
+
+
+
+        height, width, layers = frame.shape
+        size = (width, height)
+        if not out:
+            out = cv2.VideoWriter('project.mp4', cv2.VideoWriter_fourcc(*'DIVX'), 24, size)
+        out.write(proc_video)
 
         k += 1
+    out.release()
 
     SaveGistogram (begin, num, AllData)
 
@@ -178,12 +141,21 @@ def main ():
 
     try:
         shutil.rmtree (OUT_FOLDER)
-        shutil.rmtree (folder)
-        os.mkdir (OUT_FOLDER)
-        os.mkdir (folder)
-
     except:
         pass
+    try:
+        shutil.rmtree(folder)
+    except:
+        pass
+    try:
+        os.mkdir(OUT_FOLDER)
+    except:
+        pass
+    try:
+        os.mkdir(folder)
+    except:
+        pass
+
 
     cc = input ("Proceed single image (s) or video (v)?")
     if cc == 'v':
@@ -193,8 +165,8 @@ def main ():
     elif cc == 's':
         sfn = input ("Image file name: ")
         im = cv2.imread (sfn)
-        im = cv2.imwrite (folder + "img1.jpg", im)
-        saveimage (OUT_FOLDER + "img1.jpg")
+        data, out = loaddata(sfn)
+        saveimage (OUT_FOLDER + "img1.jpg", im, out)
         
 
     vsls = input("Vilualize data on plot (y/n)?")
