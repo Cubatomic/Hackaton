@@ -53,7 +53,7 @@ def visualize (fname):
 
 def saveimage (image_name, frame, outputs):
 
-    v = Visualizer (frame[:, :, ::-1], metadata=porridge_metadata, scale=1.0)
+    v = Visualizer (frame[:, :, ::-1], metadata = porridge_metadata, scale=1.0)
     masks = outputs ["instances"].get ("pred_masks")
     masks = masks.to ("cpu")
     for m in masks:
@@ -72,10 +72,10 @@ def ProceedVideo (videoname):
     end = begin + num
     k = 1
 
-    out = None # 24 - FPS
+    out = None
     while k < begin:
         ret, frame = cap.read ()
-        if frame is None:  # end of video
+        if frame is None:
             break
         k += 1
     AllData = []
@@ -99,7 +99,7 @@ def ProceedVideo (videoname):
         height, width, layers = frame.shape
         size = (width, height)
         if not out:
-            out = cv2.VideoWriter('project.mp4', cv2.VideoWriter_fourcc(*'DIVX'), 24, size)
+            out = cv2.VideoWriter ('project.mp4', cv2.VideoWriter_fourcc (*'DIVX'), 24, size)
         out.write(proc_video)
 
         k += 1
@@ -165,7 +165,7 @@ def main ():
     elif cc == 's':
         sfn = input ("Image file name: ")
         im = cv2.imread (sfn)
-        data, out = loaddata(sfn)
+        data, out = loaddata (sfn)
         saveimage (OUT_FOLDER + "img1.jpg", im, out)
         
 
